@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurdost — AI Native Code Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface2: #18181c;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0efe8;
+    --muted: #6b6a65;
+    --muted2: #9b9a94;
+    --accent: #e85d2f;
+    --accent2: #f07848;
+    --green: #1d9e75;
+    --blue: #378add;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,11,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--accent); }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--muted2);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.55rem 1.25rem;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .nav-cta:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 7rem 2rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(232,93,47,0.1);
+    border: 1px solid rgba(232,93,47,0.25);
+    color: var(--accent2);
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  h1 {
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  h1 .accent { color: var(--accent); }
+  h1 .dim { color: var(--muted); }
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: var(--muted2);
+    max-width: 560px;
+    line-height: 1.65;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-sub-ar {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.25s ease both;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border2);
+    padding: 0.85rem 2rem;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); transform: translateY(-2px); }
+
+  /* SCREENSHOT */
+  .screenshot-wrap {
+    margin-top: 4rem;
+    width: 100%;
+    max-width: 960px;
+    position: relative;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+  .screenshot-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(ellipse at center, rgba(232,93,47,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .screenshot-frame {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+  .frame-bar {
+    background: var(--surface2);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .frame-dots { display: flex; gap: 6px; }
+  .frame-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+  }
+  .dot-r { background: #e85d2f; }
+  .dot-y { background: #f59e0b; }
+  .dot-g { background: #1d9e75; }
+  .frame-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+  .screenshot-img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  /* Fallback if no image: show a mock UI */
+  .mock-editor {
+    background: #0d0d10;
+    padding: 1.5rem;
+    min-height: 360px;
+    display: grid;
+    grid-template-columns: 200px 1fr 300px;
+    gap: 0;
+  }
+  .mock-sidebar {
+    border-right: 1px solid var(--border);
+    padding: 1rem;
+  }
+  .mock-file { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); padding: 3px 0; }
+  .mock-file.active { color: var(--accent2); }
+  .mock-main { padding: 1.5rem; }
+  .mock-line { height: 12px; background: var(--surface2); border-radius: 3px; margin-bottom: 8px; }
+  .mock-panel {
+    border-left: 1px solid var(--border);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mock-ai-label { font-size: 0.7rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .mock-model-badge {
+    background: rgba(232,93,47,0.15);
+    border: 1px solid rgba(232,93,47,0.2);
+    color: var(--accent2);
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: 'DM Mono', monospace;
+    width: fit-content;
+  }
+
+  /* MODELS TICKER */
+  .ticker-section {
+    padding: 3rem 0;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+  .ticker-label {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    font-family: 'DM Mono', monospace;
+  }
+  .ticker-track {
+    display: flex;
+    gap: 1.5rem;
+    animation: ticker 20s linear infinite;
+    width: max-content;
+  }
+  .ticker-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.45rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted2);
+    white-space: nowrap;
+  }
+  .ticker-item.hot { border-color: rgba(232,93,47,0.3); color: var(--accent2); }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* FEATURES */
+  .section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .section-desc {
+    color: var(--muted2);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 500px;
+    margin-bottom: 3.5rem;
+    font-weight: 400;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .feature-card {
+    background: var(--surface);
+    padding: 2rem;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: var(--surface2); }
+  .feature-icon {
+    width: 44px; height: 44px;
+    background: rgba(232,93,47,0.1);
+    border: 1px solid rgba(232,93,47,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+  }
+  .feature-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted2);
+    line-height: 1.65;
+    font-weight: 400;
+  }
+  .feature-badge {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--green);
+    background: rgba(29,158,117,0.1);
+    border: 1px solid rgba(29,158,117,0.2);
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+
+  /* MODELS SECTION */
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .model-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .model-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+  .model-provider { font-size: 0.75rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .model-free {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+    background: rgba(29,158,117,0.1);
+    border: 1px solid rgba(29,158,117,0.2);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* COMPARE */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .compare-table th {
+    text-align: left;
+    padding: 1rem 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+  }
+  .compare-table th.highlight { color: var(--accent2); }
+  .compare-table td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted2);
+    font-weight: 400;
+  }
+  .compare-table td:first-child { color: var(--text); font-weight: 500; }
+  .compare-table td.highlight { color: var(--text); font-weight: 600; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .check { color: var(--green); }
+  .cross { color: var(--muted); }
+  .compare-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* CTA */
+  .cta-section {
+    padding: 6rem 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .cta-glow {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(232,93,47,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .cta-sub {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    color: var(--muted2);
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+  .footer-logo { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+  .footer-logo span { color: var(--accent); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .mock-editor { grid-template-columns: 1fr; }
+    .mock-sidebar, .mock-panel { display: none; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon">☀️</div>
+    <span><span>K</span>urdost</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#models">Models</a></li>
+    <li><a href="#compare">Compare</a></li>
+    <li><a href="https://github.com/Kozer94/kurdostcode" target="_blank">GitHub</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('download').scrollIntoView({behavior:'smooth'})">Download Free</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Open Source · Free Forever
+  </div>
+  <h1>
+    <span class="accent">AI-Native</span><br>
+    Code <span class="dim">Editor</span>
+  </h1>
+  <p class="hero-sub">Build software faster with 30+ AI models — Claude, GPT-4o, Gemini, DeepSeek, Llama and more. All in one editor.</p>
+  <p class="hero-sub-ar">محرر أكواد ذكي — اكتب أسرع، تعلّم أعمق</p>
+  <div class="hero-actions">
+    <a href="https://github.com/Kozer94/kurdostcode/releases" class="btn-primary" id="download">
+      ⬇ Download for Windows
+    </a>
+    <a href="https://github.com/Kozer94/kurdostcode" class="btn-secondary" target="_blank">
+      ★ View on GitHub
+    </a>
+  </div>
+
+  <div class="screenshot-wrap">
+    <div class="screenshot-glow"></div>
+    <div class="screenshot-frame">
+      <div class="frame-bar">
+        <div class="frame-dots">
+          <div class="frame-dot dot-r"></div>
+          <div class="frame-dot dot-y"></div>
+          <div class="frame-dot dot-g"></div>
+        </div>
+        <div class="frame-title">☀ Kurdost — AI Code Editor</div>
+      </div>
+      <div class="mock-editor">
+        <div class="mock-sidebar">
+          <div class="mock-file active">📁 src/</div>
+          <div class="mock-file" style="padding-left:12px">components/</div>
+          <div class="mock-file active" style="padding-left:24px; color:#e85d2f">Editor.jsx</div>
+          <div class="mock-file" style="padding-left:24px">Terminal.jsx</div>
+          <div class="mock-file" style="padding-left:24px">GitPanel.jsx</div>
+          <div class="mock-file" style="padding-left:12px">electron/</div>
+          <div class="mock-file" style="padding-left:24px">main.js</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-line" style="width:70%; background: rgba(55,138,221,0.3)"></div>
+          <div class="mock-line" style="width:45%"></div>
+          <div class="mock-line" style="width:85%; background: rgba(29,158,117,0.3)"></div>
+          <div class="mock-line" style="width:55%"></div>
+          <div class="mock-line" style="width:90%"></div>
+          <div class="mock-line" style="width:38%"></div>
+          <div class="mock-line" style="width:72%; background: rgba(232,93,47,0.3)"></div>
+          <div class="mock-line" style="width:50%"></div>
+          <div class="mock-line" style="width:65%"></div>
+          <div class="mock-line" style="width:80%; background: rgba(55,138,221,0.3)"></div>
+          <div class="mock-line" style="width:42%"></div>
+          <div class="mock-line" style="width:77%"></div>
+        </div>
+        <div class="mock-panel">
+          <div class="mock-ai-label">AI ASSISTANT</div>
+          <div class="mock-model-badge">Gemini 2.5 Flash ▾</div>
+          <div style="margin-top:8px; font-size:0.7rem; color:#6b6a65; font-family:'DM Mono',monospace; line-height:1.6">
+            How can I help?<br>Ask me anything about<br>your code...
+          </div>
+          <div style="margin-top:auto; display:flex; gap:6px; flex-wrap:wrap">
+            <div style="background:rgba(232,93,47,0.08); border:1px solid rgba(232,93,47,0.15); border-radius:5px; font-size:0.62rem; padding:3px 7px; color:#f07848; font-family:'DM Mono',monospace">Fix errors</div>
+            <div style="background:rgba(232,93,47,0.08); border:1px solid rgba(232,93,47,0.15); border-radius:5px; font-size:0.62rem; padding:3px 7px; color:#f07848; font-family:'DM Mono',monospace">Explain</div>
+            <div style="background:rgba(232,93,47,0.08); border:1px solid rgba(232,93,47,0.15); border-radius:5px; font-size:0.62rem; padding:3px 7px; color:#f07848; font-family:'DM Mono',monospace">Refactor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS TICKER -->
+<div class="ticker-section">
+  <div class="ticker-label">Powered by 30+ AI Models</div>
+  <div style="overflow:hidden">
+    <div class="ticker-track">
+      <div class="ticker-item hot">Claude 3.7 Sonnet</div>
+      <div class="ticker-item hot">GPT-4o</div>
+      <div class="ticker-item hot">Gemini 2.5 Flash</div>
+      <div class="ticker-item">DeepSeek R1</div>
+      <div class="ticker-item">Llama 3.3 70B</div>
+      <div class="ticker-item">Grok 2</div>
+      <div class="ticker-item">Mistral Large</div>
+      <div class="ticker-item hot">Claude 3.5 Haiku</div>
+      <div class="ticker-item">Qwen 2.5</div>
+      <div class="ticker-item">Cohere Command</div>
+      <div class="ticker-item hot">Gemini 2.0 Flash</div>
+      <div class="ticker-item">DeepSeek V3</div>
+      <!-- repeat for infinite scroll -->
+      <div class="ticker-item hot">Claude 3.7 Sonnet</div>
+      <div class="ticker-item hot">GPT-4o</div>
+      <div class="ticker-item hot">Gemini 2.5 Flash</div>
+      <div class="ticker-item">DeepSeek R1</div>
+      <div class="ticker-item">Llama 3.3 70B</div>
+      <div class="ticker-item">Grok 2</div>
+      <div class="ticker-item">Mistral Large</div>
+      <div class="ticker-item hot">Claude 3.5 Haiku</div>
+      <div class="ticker-item">Qwen 2.5</div>
+      <div class="ticker-item">Cohere Command</div>
+      <div class="ticker-item hot">Gemini 2.0 Flash</div>
+      <div class="ticker-item">DeepSeek V3</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">What makes it different</div>
+  <h2 class="section-title">Built for the<br>AI-first developer</h2>
+  <p class="section-desc">Everything a modern developer needs — editor, terminal, AI, and Git — in one free, open-source app.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <div class="feature-title">30+ AI Models</div>
+      <div class="feature-desc">Switch between Claude, GPT-4o, Gemini, DeepSeek, Llama, Grok, and more — all via OpenRouter.</div>
+      <span class="feature-badge">Free models included</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <div class="feature-title">Local RAG Index</div>
+      <div class="feature-desc">AI understands your entire codebase using local embeddings — no data leaves your machine.</div>
+      <span class="feature-badge">100% private</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">AI Tools & Agents</div>
+      <div class="feature-desc">AI can read files, write code, search your codebase, run terminal commands, and apply diffs.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🖥️</div>
+      <div class="feature-title">Built-in Terminal</div>
+      <div class="feature-desc">Real terminal with node-pty. AI can read terminal output and fix errors automatically.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <div class="feature-title">LSP Support</div>
+      <div class="feature-desc">Language intelligence for Python, JS/TS, Go, Rust, PHP and more via Language Server Protocol.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🆓</div>
+      <div class="feature-title">Free & Open Source</div>
+      <div class="feature-desc">No subscription, no usage limits, no paywalls. Fork it, extend it, make it yours.</div>
+      <span class="feature-badge">MIT License</span>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section class="section" id="models">
+  <div class="section-label">Supported Models</div>
+  <h2 class="section-title">Your API key,<br>your choice</h2>
+  <p class="section-desc">Bring your OpenRouter key and access any model. Several are completely free.</p>
+  <div class="models-grid">
+    <div class="model-card">
+      <div class="model-name">Claude 3.7</div>
+      <div class="model-provider">Anthropic</div>
+    </div>
+    <div class="model-card">
+      <div class="model-name">GPT-4o</div>
+      <div class="model-provider">OpenAI</div>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Gemini 2.5</div>
+      <div class="model-provider">Google</div>
+      <span class="model-free">FREE</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">DeepSeek R1</div>
+      <div class="model-provider">DeepSeek</div>
+      <span class="model-free">FREE</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Llama 3.3</div>
+      <div class="model-provider">Meta</div>
+      <span class="model-free">FREE</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Grok 2</div>
+      <div class="model-provider">xAI</div>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Mistral</div>
+      <div class="model-provider">Mistral AI</div>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Qwen 2.5</div>
+      <div class="model-provider">Alibaba</div>
+      <span class="model-free">FREE</span>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section class="section" id="compare">
+  <div class="section-label">Comparison</div>
+  <h2 class="section-title">How Kurdost<br>stacks up</h2>
+  <p class="section-desc">Honest comparison against the popular alternatives.</p>
+  <div class="compare-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th class="highlight">Kurdost</th>
+          <th>Cursor</th>
+          <th>VS Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Price</td>
+          <td class="highlight check">Free forever</td>
+          <td>$20/mo</td>
+          <td class="check">Free</td>
+        </tr>
+        <tr>
+          <td>AI Models</td>
+          <td class="highlight check">30+ models</td>
+          <td>3–4 models</td>
+          <td>Copilot only</td>
+        </tr>
+        <tr>
+          <td>Free AI tier</td>
+          <td class="highlight check">✓ Yes</td>
+          <td class="cross">✗ No</td>
+          <td class="cross">✗ No</td>
+        </tr>
+        <tr>
+          <td>Local RAG</td>
+          <td class="highlight check">✓ Built-in</td>
+          <td class="check">✓ Yes</td>
+          <td class="cross">✗ No</td>
+        </tr>
+        <tr>
+          <td>Open Source</td>
+          <td class="highlight check">✓ MIT</td>
+          <td class="cross">✗ No</td>
+          <td>Partial</td>
+        </tr>
+        <tr>
+          <td>AI reads terminal</td>
+          <td class="highlight check">✓ Yes</td>
+          <td class="check">✓ Yes</td>
+          <td class="cross">✗ No</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <h2 class="cta-title">Start coding smarter.<br>It's free.</h2>
+  <p class="cta-sub">ابدأ الآن — مجاني تماماً، بدون اشتراك</p>
+  <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap">
+    <a href="https://github.com/Kozer94/kurdostcode/releases" class="btn-primary">⬇ Download Now</a>
+    <a href="https://github.com/Kozer94/kurdostcode" class="btn-secondary" target="_blank">★ Star on GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo"><span>K</span>urdost</div>
+  <div class="footer-links">
+    <a href="https://github.com/Kozer94/kurdostcode" target="_blank">GitHub</a>
+    <a href="https://github.com/Kozer94/kurdostcode/issues" target="_blank">Issues</a>
+    <a href="https://github.com/Kozer94/kurdostcode/releases" target="_blank">Releases</a>
+  </div>
+  <div class="footer-copy">© 2026 Kurdost · Open Source</div>
+</footer>
+
+</body>
+</html>
