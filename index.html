@@ -1,79 +1,319 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ckb" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kurdost — AI Native Code Editor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kurdost — ژینگەی AI بۆ پڕۆگرامسازی</title>
+<meta name="description" content="Kurdost — AI Native Code Editor بۆ خێراتر نووسینی کۆد و بەڕێوەبردنی پڕۆژەکان بە زیرەکی دەستکرد">
+<meta name="theme-color" content="#0b0b0f">
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
-:root{--bg:#09090b;--card:#121217;--line:#23232c;--text:#f5f5f5;--muted:#9ea0a8;--accent:#e85d2f}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,sans-serif;background:radial-gradient(circle at top,#1a1410,#09090b 45%);color:var(--text)}
-nav{position:fixed;top:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 8%;background:rgba(9,9,11,.75);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.logo{font-weight:800;font-size:1.3rem}.logo span{color:var(--accent)}
-nav a{color:var(--muted);text-decoration:none;margin-left:22px}.btn{background:var(--accent);color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700}
-.hero{min-height:100vh;display:grid;place-items:center;padding:120px 8% 60px}
-.wrap{max-width:1150px;width:100%;display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
-h1{font-size:clamp(2.8rem,6vw,5rem);margin:0}.accent{color:var(--accent)}
-p{color:var(--muted);font-size:1.08rem;line-height:1.8}
-.actions{display:flex;gap:16px;margin-top:28px;flex-wrap:wrap}
-.secondary{border:1px solid var(--line);padding:12px 20px;border-radius:10px;color:#fff;text-decoration:none}
-.editor{background:#0b0b0f;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45)}
-.top{padding:12px 16px;background:#15151b;border-bottom:1px solid var(--line)}
-.code{padding:20px;font-family:monospace;color:#d8d8d8;white-space:pre}
-section{padding:80px 8%}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
-.card{background:var(--card);padding:24px;border:1px solid var(--line);border-radius:16px}
-footer{padding:50px 8%;border-top:1px solid var(--line);text-align:center;color:var(--muted)}
-@media(max-width:900px){.wrap{grid-template-columns:1fr}nav .links{display:none}}
+:root{
+  --bg:#07070a;
+  --card:#101018;
+  --line:rgba(255,255,255,0.08);
+  --text:#f5f5f5;
+  --muted:#a1a1aa;
+  --accent:#ff5a2a;
+  --accent2:#ff7a4a;
+  --glow:rgba(255,90,42,0.25);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background: radial-gradient(circle at top,#1a0f0a,#07070a 55%);
+  color:var(--text);
+  font-family:"IBM Plex Sans Arabic",sans-serif;
+  overflow-x:hidden;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;width:100%;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 7%;
+  background:rgba(10,10,14,0.75);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  z-index:100;
+}
+
+.logo{
+  font-family:"Syne";
+  font-weight:800;
+  font-size:1.2rem;
+}
+.logo span{color:var(--accent)}
+
+nav a{
+  color:var(--muted);
+  text-decoration:none;
+  margin-left:18px;
+  font-size:0.9rem;
+}
+nav a:hover{color:var(--text)}
+
+.btn{
+  background:var(--accent);
+  color:#fff;
+  padding:10px 16px;
+  border-radius:10px;
+  font-weight:600;
+}
+
+/* HERO */
+.hero{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:120px 7% 60px;
+}
+
+.wrap{
+  display:grid;
+  grid-template-columns:1.1fr 0.9fr;
+  gap:50px;
+  max-width:1200px;
+  width:100%;
+  align-items:center;
+}
+
+h1{
+  font-family:"Syne";
+  font-size:clamp(2.4rem,5vw,4.8rem);
+  line-height:1.2;
+}
+
+h1 span{color:var(--accent)}
+
+p{
+  color:var(--muted);
+  margin-top:18px;
+  line-height:1.9;
+}
+
+.actions{
+  margin-top:28px;
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.secondary{
+  border:1px solid var(--line);
+  padding:10px 16px;
+  border-radius:10px;
+  color:#fff;
+  text-decoration:none;
+}
+
+/* MOCK */
+.editor{
+  background:#0b0b10;
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,0.5);
+}
+
+.editor-top{
+  background:#151520;
+  padding:10px 14px;
+  font-family:monospace;
+  font-size:0.8rem;
+  color:var(--muted);
+}
+
+.code{
+  padding:18px;
+  font-family:monospace;
+  color:#dcdcdc;
+  font-size:0.85rem;
+  line-height:1.7;
+}
+
+/* FEATURES */
+.section{
+  padding:90px 7%;
+}
+
+.title{
+  text-align:center;
+  font-size:2rem;
+  font-family:"Syne";
+}
+.title span{color:var(--accent)}
+
+.grid{
+  margin-top:40px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:18px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  padding:22px;
+  border-radius:14px;
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(255,90,42,0.3);
+}
+
+.card h3{
+  margin-bottom:10px;
+}
+
+.card p{
+  font-size:0.9rem;
+  color:var(--muted);
+}
+
+/* TICKER */
+.ticker{
+  margin:80px 0;
+  overflow:hidden;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:18px 0;
+  background:#0b0b10;
+}
+
+.track{
+  display:flex;
+  width:max-content;
+  animation:move 20s linear infinite;
+}
+
+.item{
+  margin:0 40px;
+  color:var(--muted);
+  font-family:monospace;
+}
+.item span{color:var(--accent)}
+
+@keyframes move{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(50%)}
+}
+
+/* FOOTER */
+footer{
+  padding:40px;
+  text-align:center;
+  color:var(--muted);
+  border-top:1px solid var(--line);
+}
+
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr}
+}
 </style>
 </head>
+
 <body>
+
 <nav>
-<div class="logo">Kurd<span>ost</span></div>
-<div class="links">
-<a href="#features">Features</a>
-<a href="#about">About</a>
-<a href="#" class="btn">Download</a>
-</div>
+  <div class="logo">Kurd<span>ost</span></div>
+  <div>
+    <a href="#features">تایبەتمەندی</a>
+    <a href="#about">دەربارە</a>
+    <a class="btn" href="#">دەستپێبکە</a>
+  </div>
 </nav>
 
 <header class="hero">
-<div class="wrap">
-<div>
-<h1>Build Faster with <span class="accent">AI Native</span> Development.</h1>
-<p>Kurdost is a modern AI-powered code editor focused on speed, clean workflows and multi-model intelligence.</p>
-<div class="actions">
-<a class="btn" href="#">Get Started</a>
-<a class="secondary" href="#features">Explore</a>
-</div>
-</div>
-<div class="editor">
-<div class="top">main.py • Kurdost</div>
-<div class="code">async def chat():
-    provider = router.best()
-    reply = await provider.ask(prompt)
-    return reply
+  <div class="wrap">
 
-✔ GPT-5.5
-✔ Claude
-✔ Gemini
-✔ DeepSeek</div>
-</div>
-</div>
+    <div>
+      <h1>
+        ژینگەی <span>زیرەکی دەستکرد</span><br>
+        بۆ پەرەپێدانی کۆد
+      </h1>
+
+      <p>
+        Kurdost پلاتفۆرمێکی نوێی AI ـیە بۆ خێراتر نووسینی کۆد،
+        ڕاستکردنەوەی هەڵەکان و بەڕێوەبردنی پڕۆژەکان بە زیرەکی دەستکرد.
+      </p>
+
+      <div class="actions">
+        <a class="btn" href="#">دەستپێکردن</a>
+        <a class="secondary" href="#features">بینینی تایبەتمەندی</a>
+      </div>
+    </div>
+
+    <div class="editor">
+      <div class="editor-top">main.py • Kurdost AI Runtime</div>
+      <div class="code">
+async def generate():
+    model = ai.select_best()
+    result = await model.run(prompt)
+
+    return result
+
+
+✔ GPT / Claude / Gemini
+✔ Streaming AI
+✔ Low latency mode
+✔ Auto debugging
+      </div>
+    </div>
+
+  </div>
 </header>
 
-<section id="features">
-<h2>Features</h2>
-<div class="grid">
-<div class="card"><h3>⚡ Fast</h3><p>Minimal latency and optimized workflow.</p></div>
-<div class="card"><h3>🤖 AI Native</h3><p>Multiple AI providers in one interface.</p></div>
-<div class="card"><h3>🔒 Secure</h3><p>Designed with privacy-first architecture.</p></div>
-<div class="card"><h3>🧩 Extensible</h3><p>Ready for plugins and custom providers.</p></div>
-</div>
+<section class="ticker">
+  <div class="track">
+    <div class="item">AI <span>FAST</span></div>
+    <div class="item">CLEAN CODE <span>STRUCTURE</span></div>
+    <div class="item">SMART <span>DEBUGGING</span></div>
+    <div class="item">MULTI MODEL <span>ENGINE</span></div>
+    <div class="item">AI <span>FAST</span></div>
+    <div class="item">CLEAN CODE <span>STRUCTURE</span></div>
+  </div>
 </section>
 
-<footer>© 2026 Kurdost. All rights reserved.</footer>
+<section id="features" class="section">
+
+  <div class="title">تایبەتمەندییە <span>سەرەکییەکان</span></div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>⚡ خێرا</h3>
+      <p>پرۆسەی نووسینی کۆد بە شێوەیەکی خێرا و کارا.</p>
+    </div>
+
+    <div class="card">
+      <h3>🤖 زیرەکی دەستکرد</h3>
+      <p>چەندین مۆدێلی AI لە یەک سیستەم.</p>
+    </div>
+
+    <div class="card">
+      <h3>🔐 پارێزراو</h3>
+      <p>سیستەمی پاراستنی داتا بە شێوەی نوێ.</p>
+    </div>
+
+    <div class="card">
+      <h3>🧩 گەشەپێدراو</h3>
+      <p>ئامادەی زیادکردنی plugin و API.</p>
+    </div>
+
+  </div>
+
+</section>
+
+<footer>
+  © 2026 Kurdost — هەموو مافەکان پارێزراون
+</footer>
+
 </body>
 </html>
